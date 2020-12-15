@@ -10,7 +10,9 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class Api implements HomeData.FetchData {
+public class DetailApi implements HomeData.FetchData {
+
+    private final ArrayList<ImgListItem> ret = new ArrayList<>();
 
     public String getUrl() {
         return url;
@@ -22,23 +24,19 @@ public class Api implements HomeData.FetchData {
 
     private String url;
 
-    public ArrayList<ImgListItem> getRet() {
-        return ret;
-    }
-
-    private final ArrayList<ImgListItem> ret = new ArrayList<>();
-
+    @Override
     public void request() throws IOException {
-        Document doc = Jsoup.connect("https://www.bkj233b.top/?iao.su").get();
+        Document doc = Jsoup.connect(url).get();
         Element parent = doc.getElementById("masonry");
-        Elements img = parent.select(".item-img");
-        Elements a = parent.select(".item-link");
+        Elements img = parent.select(".post-item-img");
 
         for (int i = 0; i < img.size(); i++) {
-            ret.add(new ImgListItem(img.get(i).attr("data-original"), img.get(i).attr("alt"), a.get(i).attr("href")));
+            ret.add(new ImgListItem(img.get(i).attr("data-original"), img.get(i).attr("alt"), ""));
         }
     }
 
-    public Api() {
+    @Override
+    public ArrayList<ImgListItem> getRet() {
+        return ret;
     }
 }

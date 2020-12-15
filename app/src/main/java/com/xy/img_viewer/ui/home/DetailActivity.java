@@ -1,14 +1,8 @@
 package com.xy.img_viewer.ui.home;
 
-import android.content.Context;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
@@ -18,31 +12,45 @@ import androidx.paging.PagedList;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
+import android.os.Bundle;
+
 import com.xy.img_viewer.R;
 import com.xy.img_viewer.entity.ImgListItem;
 
-public class HomeFragment extends Fragment {
+public class DetailActivity extends AppCompatActivity {
 
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        HomeViewModel homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
-        View root = inflater.inflate(R.layout.fragment_home, container, false);
-        Context ctx = getContext();
-        RecyclerView recyclerView = root.findViewById(R.id.recyclerview);
-        recyclerView.setLayoutManager(new LinearLayoutManager(ctx));
+    public String url;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_detail);
+
+        Intent intent = getIntent();
+        url = intent.getStringExtra("url");
+
+        HomeViewModel homeViewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
+            @NonNull
+            @Override
+            public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
+                return (T) new HomeViewModel(url);
+            }
+        }).get(HomeViewModel.class);
+
+        RecyclerView recyclerView = findViewById(R.id.recyclerview);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 //        recyclerView.setHasFixedSize(true);
-        Adapter adapter = new Adapter(ctx);
+        Adapter adapter = new Adapter(this);
         recyclerView.setAdapter(adapter);
 
-
-        homeViewModel.getItemPagedList().observe(getViewLifecycleOwner(), new Observer<PagedList<ImgListItem>>() {
+        homeViewModel.getItemPagedList().observe(this, new Observer<PagedList<ImgListItem>>() {
             @Override
             public void onChanged(@Nullable PagedList<ImgListItem> item) {
                 adapter.submitList(item);
             }
         });
-        return root;
     }
-
 
     public static class HomeViewModel extends ViewModel {
         public LiveData<PagedList<ImgListItem>> getItemPagedList() {
@@ -51,8 +59,10 @@ public class HomeFragment extends Fragment {
 
         private final LiveData<PagedList<ImgListItem>> itemPagedList;
 
-        public HomeViewModel() {
-            HomeData hData = new HomeData(new Api());
+        public HomeViewModel(String url) {
+            DetailApi api = new DetailApi();
+            api.setUrl(url);
+            HomeData hData = new HomeData(api);
             HomeData.ItemDataSourceFactory dataSource = hData.new ItemDataSourceFactory();
             PagedList.Config pagedListConfig =
                     (new PagedList.Config.Builder())
