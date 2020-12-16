@@ -1,7 +1,5 @@
 package com.xy.img_viewer.ui.home;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.paging.DataSource;
 import androidx.paging.PageKeyedDataSource;
@@ -23,7 +21,6 @@ public class HomeData {
 
         @Override
         public void loadInitial(@NonNull LoadInitialParams<Integer> params, @NonNull LoadInitialCallback<Integer, ImgListItem> callback) {
-            Log.e("aaa", "init");
             Integer nextKey = null;
             try {
                 nextKey = api.init();
@@ -40,7 +37,6 @@ public class HomeData {
 
         @Override
         public void loadAfter(@NonNull LoadParams<Integer> params, @NonNull LoadCallback<Integer, ImgListItem> callback) {
-            Log.e("bbb", String.valueOf(params.key));
             Integer nextKey = null;
             try {
                 nextKey = api.after(params.key);

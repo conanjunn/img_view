@@ -24,8 +24,6 @@ public class Api implements HomeData.FetchData {
     private void request(Integer pageNum) throws IOException {
         String url = String.format("https://www.bkj233b.top/page/%s/", pageNum);
 
-        Log.e("url", url);
-
         ArrayList<ImgListItem> ret1 = new ArrayList<>();
 
         Document doc = Jsoup.connect(url).get();
