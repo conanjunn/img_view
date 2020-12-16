@@ -1,6 +1,7 @@
 package com.xy.img_viewer.ui.home;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,7 +31,18 @@ public class HomeFragment extends Fragment {
         RecyclerView recyclerView = root.findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(ctx));
 //        recyclerView.setHasFixedSize(true);
-        Adapter adapter = new Adapter(ctx);
+        Adapter adapter = new Adapter(ctx, new Adapter.EventListener() {
+            @Override
+            public void handler(View view, ImgListItem data) {
+                Intent intent = new Intent();
+                String a = data.getHref();
+                intent.putExtra("url", a);
+                if (ctx != null) {
+                    intent.setClass(ctx, DetailActivity.class);
+                    ctx.startActivity(intent);
+                }
+            }
+        });
         recyclerView.setAdapter(adapter);
 
 
@@ -42,7 +54,6 @@ public class HomeFragment extends Fragment {
         });
         return root;
     }
-
 
     public static class HomeViewModel extends ViewModel {
         public LiveData<PagedList<ImgListItem>> getItemPagedList() {
@@ -57,7 +68,8 @@ public class HomeFragment extends Fragment {
             PagedList.Config pagedListConfig =
                     (new PagedList.Config.Builder())
                             .setEnablePlaceholders(false)
-                            .setPageSize(10).build();
+                            .setPrefetchDistance(1)
+                            .setPageSize(1).build();
 
             itemPagedList = (new LivePagedListBuilder<>(dataSource, pagedListConfig))
                     .build();

@@ -1,5 +1,7 @@
 package com.xy.img_viewer.ui.home;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.paging.DataSource;
 import androidx.paging.PageKeyedDataSource;
@@ -17,38 +19,52 @@ public class HomeData {
         this.api = api;
     }
 
-    private class ItemDataSource extends PageKeyedDataSource<String, ImgListItem> {
+    private class ItemDataSource extends PageKeyedDataSource<Integer, ImgListItem> {
 
         @Override
-        public void loadInitial(@NonNull LoadInitialParams<String> params, @NonNull LoadInitialCallback<String, ImgListItem> callback) {
+        public void loadInitial(@NonNull LoadInitialParams<Integer> params, @NonNull LoadInitialCallback<Integer, ImgListItem> callback) {
+            Log.e("aaa", "init");
+            Integer nextKey = null;
             try {
-                api.request();
+                nextKey = api.init();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            callback.onResult(api.getRet(), null, null);
+
+            callback.onResult(api.getRet(), null, nextKey);
         }
 
         @Override
-        public void loadBefore(@NonNull LoadParams<String> params, @NonNull LoadCallback<String, ImgListItem> callback) {
+        public void loadBefore(@NonNull LoadParams<Integer> params, @NonNull LoadCallback<Integer, ImgListItem> callback) {
         }
 
         @Override
-        public void loadAfter(@NonNull LoadParams<String> params, @NonNull LoadCallback<String, ImgListItem> callback) {
+        public void loadAfter(@NonNull LoadParams<Integer> params, @NonNull LoadCallback<Integer, ImgListItem> callback) {
+            Log.e("bbb", String.valueOf(params.key));
+            Integer nextKey = null;
+            try {
+                nextKey = api.after(params.key);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            callback.onResult(api.getRet(), nextKey);
         }
     }
 
-    public class ItemDataSourceFactory extends DataSource.Factory<String, ImgListItem> {
+    public class ItemDataSourceFactory extends DataSource.Factory<Integer, ImgListItem> {
 
         @NonNull
         @Override
-        public DataSource<String, ImgListItem> create() {
+        public DataSource<Integer, ImgListItem> create() {
             return new ItemDataSource();
         }
     }
 
     interface FetchData {
-        void request() throws IOException;
+        Integer init() throws IOException;
+
+        Integer after(Integer pageNum) throws IOException;
 
         ArrayList<ImgListItem> getRet();
     }

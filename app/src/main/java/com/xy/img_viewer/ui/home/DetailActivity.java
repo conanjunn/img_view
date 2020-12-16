@@ -14,13 +14,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 
 import com.xy.img_viewer.R;
 import com.xy.img_viewer.entity.ImgListItem;
 
+import java.lang.reflect.InvocationTargetException;
+
 public class DetailActivity extends AppCompatActivity {
 
-    public String url;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,20 +30,18 @@ public class DetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail);
 
         Intent intent = getIntent();
-        url = intent.getStringExtra("url");
+        String url = intent.getStringExtra("url");
 
-        HomeViewModel homeViewModel = new ViewModelProvider(this, new ViewModelProvider.Factory() {
-            @NonNull
-            @Override
-            public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-                return (T) new HomeViewModel(url);
-            }
-        }).get(HomeViewModel.class);
+        HomeViewModel homeViewModel = new ViewModelProvider(this, new HomeViewModelFactory(url)).get(HomeViewModel.class);
 
         RecyclerView recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 //        recyclerView.setHasFixedSize(true);
-        Adapter adapter = new Adapter(this);
+        Adapter adapter = new Adapter(this, new Adapter.EventListener() {
+            @Override
+            public void handler(View view, ImgListItem itemData) {
+            }
+        });
         recyclerView.setAdapter(adapter);
 
         homeViewModel.getItemPagedList().observe(this, new Observer<PagedList<ImgListItem>>() {
@@ -50,6 +50,26 @@ public class DetailActivity extends AppCompatActivity {
                 adapter.submitList(item);
             }
         });
+    }
+
+    public static class HomeViewModelFactory implements ViewModelProvider.Factory {
+        public String url;
+
+        public HomeViewModelFactory(String url) {
+            this.url = url;
+        }
+
+        @NonNull
+        @Override
+        public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
+            try {
+                return modelClass.getConstructor(String.class).newInstance(url);
+            } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
+                e.printStackTrace();
+            }
+            //noinspection ConstantConditions
+            return null;
+        }
     }
 
     public static class HomeViewModel extends ViewModel {
@@ -67,7 +87,8 @@ public class DetailActivity extends AppCompatActivity {
             PagedList.Config pagedListConfig =
                     (new PagedList.Config.Builder())
                             .setEnablePlaceholders(false)
-                            .setPageSize(10).build();
+                            .setPrefetchDistance(1)
+                            .setPageSize(1).build();
 
             itemPagedList = (new LivePagedListBuilder<>(dataSource, pagedListConfig))
                     .build();

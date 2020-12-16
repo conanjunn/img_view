@@ -1,10 +1,8 @@
 package com.xy.img_viewer.ui.home;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,8 +23,9 @@ public class Adapter extends PagedListAdapter<ImgListItem, Adapter.VH> {
 
     private final Context ctx;
     private final RequestManager glideManager;
+    private final EventListener listener;
 
-    protected Adapter(Context ctx) {
+    protected Adapter(Context ctx, EventListener listener) {
         super(new DiffUtil.ItemCallback<ImgListItem>() {
             @Override
             public boolean areItemsTheSame(@NonNull ImgListItem oldItem, @NonNull ImgListItem newItem) {
@@ -39,6 +38,7 @@ public class Adapter extends PagedListAdapter<ImgListItem, Adapter.VH> {
             }
         });
         this.ctx = ctx;
+        this.listener = listener;
         glideManager = Glide.with(ctx);
     }
 
@@ -50,13 +50,11 @@ public class Adapter extends PagedListAdapter<ImgListItem, Adapter.VH> {
             @Override
             public void onClick(View v) {
                 int pos = (int) view.getTag();
-                Log.e("pos", String.valueOf(pos));
-                Intent intent = new Intent();
-                String a = getItem(pos).getHref();
-                intent.putExtra("url", a);
+                ImgListItem data = getItem(pos);
+                if (data == null) return;
 
-                intent.setClass(ctx, DetailActivity.class);
-                ctx.startActivity(intent);
+                listener.handler(view, data);
+
             }
         });
         return new VH(view);
@@ -65,6 +63,7 @@ public class Adapter extends PagedListAdapter<ImgListItem, Adapter.VH> {
     @Override
     public void onBindViewHolder(@NonNull VH holder, int position) {
         ImgListItem data = getItem(position);
+        if (data == null) return;
         holder.getTextV().setText(data.getTitle());
         holder.getItemView().setTag(position);
         glideManager.load(data.getUrl()).placeholder(new ColorDrawable(Color.GRAY)).into(holder.getImgV());
@@ -109,8 +108,7 @@ public class Adapter extends PagedListAdapter<ImgListItem, Adapter.VH> {
         }
     }
 
-
-    interface clickHandler {
-        void onClick(String url);
+    interface EventListener {
+        void handler(View view, ImgListItem itemData);
     }
 }

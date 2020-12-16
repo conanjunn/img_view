@@ -11,12 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class DetailApi implements HomeData.FetchData {
-
     private final ArrayList<ImgListItem> ret = new ArrayList<>();
-
-    public String getUrl() {
-        return url;
-    }
 
     public void setUrl(String url) {
         this.url = url;
@@ -24,8 +19,7 @@ public class DetailApi implements HomeData.FetchData {
 
     private String url;
 
-    @Override
-    public void request() throws IOException {
+    private void request() throws IOException {
         Document doc = Jsoup.connect(url).get();
         Element parent = doc.getElementById("masonry");
         Elements img = parent.select(".post-item-img");
@@ -33,6 +27,17 @@ public class DetailApi implements HomeData.FetchData {
         for (int i = 0; i < img.size(); i++) {
             ret.add(new ImgListItem(img.get(i).attr("data-original"), img.get(i).attr("alt"), ""));
         }
+    }
+
+    @Override
+    public Integer init() throws IOException {
+        request();
+        return null;
+    }
+
+    @Override
+    public Integer after(Integer pageNum) {
+        return null;
     }
 
     @Override
