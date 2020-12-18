@@ -1,6 +1,9 @@
 package com.xy.img_viewer.ui.home;
 
-import androidx.annotation.NonNull;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.LiveData;
@@ -12,14 +15,8 @@ import androidx.paging.PagedList;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
-
 import com.xy.img_viewer.R;
 import com.xy.img_viewer.entity.ImgListItem;
-
-import java.lang.reflect.InvocationTargetException;
 
 public class DetailActivity extends AppCompatActivity {
 
@@ -32,7 +29,8 @@ public class DetailActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String url = intent.getStringExtra("url");
 
-        HomeViewModel homeViewModel = new ViewModelProvider(this, new HomeViewModelFactory(url)).get(HomeViewModel.class);
+        HomeViewModel homeViewModel = new ViewModelProvider(this).get(HomeViewModel.class);
+        homeViewModel.init(url);
 
         RecyclerView recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -52,34 +50,14 @@ public class DetailActivity extends AppCompatActivity {
         });
     }
 
-    public static class HomeViewModelFactory implements ViewModelProvider.Factory {
-        public String url;
-
-        public HomeViewModelFactory(String url) {
-            this.url = url;
-        }
-
-        @NonNull
-        @Override
-        public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-            try {
-                return modelClass.getConstructor(String.class).newInstance(url);
-            } catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
-                e.printStackTrace();
-            }
-            //noinspection ConstantConditions
-            return null;
-        }
-    }
-
     public static class HomeViewModel extends ViewModel {
         public LiveData<PagedList<ImgListItem>> getItemPagedList() {
             return itemPagedList;
         }
 
-        private final LiveData<PagedList<ImgListItem>> itemPagedList;
+        private LiveData<PagedList<ImgListItem>> itemPagedList;
 
-        public HomeViewModel(String url) {
+        public void init(String url) {
             DetailApi api = new DetailApi();
             api.setUrl(url);
             HomeData hData = new HomeData(api);
