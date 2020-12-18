@@ -1,8 +1,11 @@
 package com.xy.img_viewer.ui.home;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,6 +20,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.xy.img_viewer.R;
 import com.xy.img_viewer.entity.ImgListItem;
+
+import java.io.File;
+import java.util.ArrayList;
 
 public class DetailActivity extends AppCompatActivity {
 
@@ -48,6 +54,32 @@ public class DetailActivity extends AppCompatActivity {
                 adapter.submitList(item);
             }
         });
+
+        Context that = this;
+
+        findViewById(R.id.download).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ArrayList<ImgListItem> list = homeViewModel.api.getRet();
+                if (list.size() == 0) {
+                    Toast.makeText(that, "数据未加载完毕", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                File directory = new File(that.getExternalFilesDir(Environment.DIRECTORY_PICTURES).getPath(), list.get(0).getTitle());
+                if (!directory.exists()) {
+                    boolean isSucc = directory.mkdir();
+                    if (!isSucc) {
+                        Toast.makeText(that, "文件夹创建失败", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                }
+                DownloadImg.Params[] myList = new DownloadImg.Params[list.size()];
+                for (int i = 0; i < list.size(); i++) {
+                    myList[i] = new DownloadImg.Params(list.get(i).getUrl(), directory);
+                }
+                new DownloadImg(that).execute(myList);
+            }
+        });
     }
 
     public static class HomeViewModel extends ViewModel {
@@ -57,8 +89,10 @@ public class DetailActivity extends AppCompatActivity {
 
         private LiveData<PagedList<ImgListItem>> itemPagedList;
 
+        public DetailApi api;
+
         public void init(String url) {
-            DetailApi api = new DetailApi();
+            api = new DetailApi();
             api.setUrl(url);
             HomeData hData = new HomeData(api);
             HomeData.ItemDataSourceFactory dataSource = hData.new ItemDataSourceFactory();
